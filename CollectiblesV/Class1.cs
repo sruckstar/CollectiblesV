@@ -347,6 +347,7 @@ public class CollectiblesV : Script
     int total = 0;
     Prop test;
     Blip test2;
+    Pickup test3;
 
     public CollectiblesV()
     {
@@ -383,13 +384,6 @@ public class CollectiblesV : Script
                 Wait(10000);
             }/*/
 
-            Function.Call(Hash.SET_MINIMAP_SONAR_SWEEP, true);
-            Function.Call(Hash.ALLOW_SONAR_BLIPS, true);
-
-            test2 = World.CreateBlip(new Vector3(-832.407f, 159.9612f, 68.46378f));
-            Function.Call(Hash.SET_BLIP_FLASHES, test2, true);
-            Function.Call(Hash.SET_BLIP_FLASH_INTERVAL, test2, 1000);
-            Function.Call(Hash.SET_BLIP_FLASH_TIMER, test2, 999999);
         }
     }
 
