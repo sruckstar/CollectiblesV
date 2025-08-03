@@ -14,12 +14,13 @@ using LemonUI.Scaleform;
 using LemonUI.Elements;
 using LemonUI.Menus;
 
-public class CollectibleManager : Script
+public class CollectiblesV : Script
 {
     private readonly List<CollectibleItem> collectibles = new List<CollectibleItem>();
-    private readonly HashSet<int> collectedIds = new HashSet<int>(); // Хранит ID найденных пропов
-    private readonly Dictionary<CollectibleType, int> collectedCount = new Dictionary<CollectibleType, int>(); // Счетчик собранных предметов каждого типа
-    private readonly float collectRadius = 2.0f;
+    private readonly HashSet<int> collectedIds = new HashSet<int>(); // Stores the IDs of the props found
+    private readonly Dictionary<CollectibleType, int> collectedCount = new Dictionary<CollectibleType, int>(); // Counter of collected items of each type
+    private readonly float collectRadius_without_keys = 2.0f;
+    private readonly float collectRadius_with_keys = 1.0f;
     private readonly float spawnDistance = 100.0f;
     private readonly float zoneRadius = 200.0f;
     private readonly string saveFilePath = "scripts/CollectiblesV/CollectedProps.bin";
@@ -29,81 +30,42 @@ public class CollectibleManager : Script
     private BigMessage bigMessage;
     private Blip Solomon;
     private bool SolomonVehicleActive = false;
-    private bool CacheActive = false;
     private bool isCollectorRadarActive = false;
     private List<Blip> collectorBlips = new List<Blip>();
     private DateTime lastBlinkTime = DateTime.MinValue;
     private int blinkInterval = 1000;
-    private int pauseInterval = 500; // Пауза между удалением и созданием меток
-    private bool isRemovingBlips = true; // Указывает, удаляем ли метки в данный момент
-    private DateTime lastActionTime = DateTime.MinValue; // Время последнего действия (удаление или создание меток)
+    private int pauseInterval = 500; 
+    private bool isRemovingBlips = true; 
+    private DateTime lastActionTime = DateTime.MinValue; 
     private readonly NativeMenu menu;
     private bool ShowHelpScanner = false;
-    NativeItem figures;
-    NativeItem snowmen;
-    NativeItem ghosts;
-    NativeItem props;
-    NativeItem LDorg;
-    NativeItem cards;
-    NativeItem signal;
-    NativeItem lanterns;
-    NativeItem Yuanbao;
+    private NativeItem figures;
+    private NativeItem snowmen;
+    private NativeItem ghosts;
+    private NativeItem props;
+    private NativeItem LDorg;
+    private NativeItem cards;
+    private NativeItem signal;
+    private NativeItem lanterns;
+    private NativeItem Yuanbao;
+    private NativeItem antennas;
+    private Keys KeyActiveMenu;
+    private ScriptSettings config;
 
-    private List<Blip> test_jammers = new List<Blip> { };
+    private int scaleformHandle;
+    private bool messageVisible = false;
+    private int messageStartTime;
 
-    private List<SpawnPoint[]> geraldZones = new List<SpawnPoint[]>
-    {
-        new[]
-        {
-            new SpawnPoint(new Vector3(192.5969f, -922.6927f, 30.69225f), new Vector3(0, 0, 0)),   // Точка для Blip и круга
-            new SpawnPoint(new Vector3(212.2505f, -934.7871f, 28.91f), new Vector3(0, 0, 0)),  // Точка для спавна пропа
-            new SpawnPoint(new Vector3(189.51f, -919.74f, 29.96f), new Vector3(4.86651f, 46.01437f, 59.76421f)),
-            new SpawnPoint(new Vector3(211.9137f, -935.1722f, 23.39f), new Vector3(0, 0, 0)),
-            new SpawnPoint(new Vector3(198.08f, -883.81f, 30.63f), new Vector3(1.001786f, 5.008956f, -35.99999f)),
-            new SpawnPoint(new Vector3(169.3715f, -934.8247f, 29.22f), new Vector3(0, 0, -22f))
-        },
-        new[]
-        {
-            new SpawnPoint(new Vector3(192.5969f, -922.6927f, 30.69225f), new Vector3(0, 0, 0)),   // Точка для Blip и круга
-            new SpawnPoint(new Vector3(212.2505f, -934.7871f, 28.91f), new Vector3(0, 0, 0)),  // Точка для спавна пропа
-            new SpawnPoint(new Vector3(189.51f, -919.74f, 29.96f), new Vector3(4.86651f, 46.01437f, 59.76421f)),
-            new SpawnPoint(new Vector3(211.9137f, -935.1722f, 23.39f), new Vector3(0, 0, 0)),
-            new SpawnPoint(new Vector3(198.08f, -883.81f, 30.63f), new Vector3(1.001786f, 5.008956f, -35.99999f)),
-            new SpawnPoint(new Vector3(169.3715f, -934.8247f, 29.22f), new Vector3(0, 0, -22f))
-        },
-    };
+    private static int ante_audio = -1;
 
-    private Vector3 blipPoint;
-    private SpawnPoint[] spawnPoints;
-    private Vector3 spawnPoint;
-    private Vector3 spawnRotation;
-    private int currentZoneIndex = -1;
-    private Blip zoneBlip;
-    private Prop geraldProp;
-
-    public struct SpawnPoint
-    {
-        public Vector3 Position { get; }
-        public Vector3 Rotation { get; }
-
-        public SpawnPoint(Vector3 position, Vector3 rotation)
-        {
-            Position = position;
-            Rotation = rotation;
-        }
-    }
-
-    public CollectibleManager()
+    public CollectiblesV()
     {
         Tick += OnTick;
         KeyUp += onkeyup;
         Aborted += OnAborted;
 
-        InitializeCollectedCount();
-        LoadCollectibles();
-        LoadCollectedData(); 
-        UnlockRadioStations();
-        LoadSoundsEffects();
+        config = ScriptSettings.Load("Scripts\\CollectiblesV\\settings.ini");
+        KeyActiveMenu = config.GetValue<Keys>("MAIN", "ActivateMenu", Keys.Y);
 
         bigMessage = new BigMessage("", "", type: MessageType.Customizable);
         menu = new NativeMenu("CollectiblesV", "", "");
@@ -119,6 +81,14 @@ public class CollectibleManager : Script
         signal = new NativeItem(Game.GetLocalizedString("PIM_SIGNAL"), "");
         lanterns = new NativeItem(Game.GetLocalizedString("PIM_TRICKTR"), "");
         Yuanbao = new NativeItem(Game.GetLocalizedString("PIM_YUANBAOTR"), "");
+        antennas = new NativeItem("Radio antennas", "");
+
+        InitializeCollectedCount();
+        LoadCollectibles();
+        LoadCollectedData();
+        UnlockRadioStations();
+        LoadSoundsEffects();
+
         figures.AltTitle = $"{collectedCount[CollectibleType.ActionFigures]}/100";
         snowmen.AltTitle = $"{collectedCount[CollectibleType.Snowmen]}/25";
         ghosts.AltTitle = $"{collectedCount[CollectibleType.Ghosts]}/20";
@@ -128,39 +98,19 @@ public class CollectibleManager : Script
         signal.AltTitle = $"{collectedCount[CollectibleType.Jammers]}/50";
         Yuanbao.AltTitle = $"{collectedCount[CollectibleType.Yuanbao]}/36";
         lanterns.AltTitle = $"{collectedCount[CollectibleType.Lanterns]}/200";
-        menu.Add(figures);
-        menu.Add(LDorg);
-        menu.Add(cards);
-        menu.Add(Yuanbao);
-        menu.Add(snowmen);
-        menu.Add(ghosts);
-        menu.Add(props);
-        menu.Add(signal);
-        menu.Add(lanterns);
+        antennas.AltTitle = $"{collectedCount[CollectibleType.RadioAntennas]}/10";
     }
 
     private void LoadSoundsEffects()
     {
         Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_MPSUM2/DLC_mpSum2_Collectibles", false, -1);
         Function.Call<bool>(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_VINEWOOD/DLC_VW_HIDDEN_COLLECTIBLES", false, -1);
-
         Function.Call<bool>(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_MPSUM2/DLC_mpSum2_Collectibles", false, -1);
-        //Function.Call(Hash.PLAY_SOUND_FROM_COORD, -1, "Collect", 0f, 0f, 1000f, "LD_Organics_sounds", false, 0, false);
-
         Function.Call<bool>(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_24-2/DLC_24-2_Collectibles", false, -1);
-       // Function.Call(Hash.PLAY_SOUND_FROM_COORD, -1, "Collect", 0f, 0f, 1000f, "DLC_24-2_Lunar_New_Year_Collectible_Sounds", false, 0, false);
-
         Function.Call<bool>(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_CM2022/CM2022_FREEMODE_01", false, -1);
-        //Function.Call(Hash.PLAY_SOUND_FROM_COORD, -1, "destroy", 0f, 0f, 1000f, "Snowmen_Colllectible_Sounds", false, 0, false);
-
-        Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "Ghost_Hunt_Sounds", 0, 0);
-       // Function.Call(Hash.PLAY_SOUND_FROM_COORD, -1, "Collect_Shard", 0f, 0f, 1000f, "Ghost_Hunt_Sounds", false, 0, false);
-
-        Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_SUM20/DLC_SUM20_HIDDEN_COLLECTIBLES", 0, 0);
-       // Function.Call(Hash.PLAY_SOUND_FROM_COORD, -1, "movie_prop", 0f, 0f, 1000f, "DLC_SUM20_HIDDEN_COLLECTIBLES", false, 0, false);
-
-        Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_MPSUM2/DLC_mpSum2_Collectibles", 0, 0);
-       // Function.Call(Hash.PLAY_SOUND_FROM_COORD, -1, "Collect_Treat", 0f, 0f, 1000f, "Trick_Or_Treat_sounds", false, 0, false);
+        Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "Ghost_Hunt_Sounds", false, -1);
+        Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_SUM20/DLC_SUM20_HIDDEN_COLLECTIBLES", false, -1);
+        Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_MPSUM2/DLC_mpSum2_Collectibles", false, -1);
     }
 
     private void ToggleCollectorRadar()
@@ -198,16 +148,15 @@ public class CollectibleManager : Script
                     if (!collectible.Collected && Vector3.Distance(Game.Player.Character.Position, collectible.Position) <= spawnDistance)
                     {
                         Blip blip = World.CreateBlip(collectible.Position);
-                        blip.Sprite = BlipSprite.Standard; // Тип иконки
-                        blip.Color = BlipColor.White;      // Цвет метки
-                        blip.Scale = 0.8f;                // Размер иконки
+                        blip.Sprite = BlipSprite.Standard; 
+                        blip.Color = BlipColor.White;     
+                        blip.Scale = 0.8f;               
                         collectorBlips.Add(blip);
                     }
                 }
-                isRemovingBlips = true; // Переключаемся на удаление меток
+                isRemovingBlips = true; 
             }
 
-            // Обновляем время последнего действия
             lastActionTime = DateTime.Now;
         }
     }
@@ -236,7 +185,6 @@ public class CollectibleManager : Script
                 ShowHelpScanner = true;
             }
 
-            // Если игрок в Terrorbyte и нажата кнопка активации (E или правый стик)
             if (Function.Call<bool>(Hash.IS_CONTROL_PRESSED, 0, 209))
             {
                 ToggleCollectorRadar();
@@ -245,7 +193,6 @@ public class CollectibleManager : Script
         }
         else if (isCollectorRadarActive)
         {
-            // Отключаем радар, если игрок вышел из Terrorbyte
             ToggleCollectorRadar();
             while (Function.Call<bool>(Hash.IS_CONTROL_PRESSED, 0, 209)) Script.Wait(0);
         }
@@ -257,7 +204,6 @@ public class CollectibleManager : Script
 
     private void InitializeCollectedCount()
     {
-        // Инициализация счётчика для каждого типа
         foreach (CollectibleType type in Enum.GetValues(typeof(CollectibleType)))
         {
             collectedCount[type] = 0;
@@ -270,110 +216,125 @@ public class CollectibleManager : Script
         //collectibles PARAMS: ID, Position, Model Name, Rotation, Type, Hour Spawn
 
         //Action figures
-        for (int i = 0; i < 100; i++)
+        if (config.GetValue<int>("SPAWN_SETTINGS", "ActionFigures", 1) == 1)
         {
-            collectibles.Add(new CollectibleItem(i, CollectList.GetFiguresPosition(i), CollectList.GetFiguresModelHash(i), CollectList.GetFiguresRotation(i), CollectibleType.ActionFigures, -1));
+            for (int i = 0; i < 100; i++)
+            {
+                collectibles.Add(new CollectibleItem(i, CollectList.GetFiguresPosition(i), CollectList.GetFiguresModelHash(i), CollectList.GetFiguresRotation(i), CollectibleType.ActionFigures, -1));
+            }
+            menu.Add(figures);
         }
 
         //Snowmen
-        collectibles.Add(new CollectibleItem(101, new Vector3(1340.966f, -1585.962f, 53.23f), "xm3_prop_xm3_snowman_01a", new Vector3(0, 0, 0), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(102, new Vector3(1270.01f, -646.6276f, 66.96817f), "xm3_prop_xm3_snowman_01b", new Vector3(0, 0, 121.5464f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(103, new Vector3(902.6162f, -285.7397f, 64.68812f), "xm3_prop_xm3_snowman_01c", new Vector3(0, 0, 16.60338f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(104, new Vector3(217.9505f, -104.4566f, 68.72256f), "xm3_prop_xm3_snowman_01b", new Vector3(0, 0, 69.65895f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(105, new Vector3(181.4533f, -906.3058f, 29.6935f), "xm3_prop_xm3_snowman_01c", new Vector3(0, 0, 19.21218f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(106, new Vector3(-254.1831f, -1562.791f, 30.89726f), "xm3_prop_xm3_snowman_01c", new Vector3(0, 0, 119.4156f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(107, new Vector3(-1106.281f, -1398.883f, 4.242457f), "xm3_prop_xm3_snowman_01b", new Vector3(0, 0, 40.3349f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(108, new Vector3(-958.4882f, -780.1604f, 16.83612f), "xm3_prop_xm3_snowman_01a", new Vector3(0, 0, 56.08267f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(109, new Vector3(-821.1164f, 165.2018f, 70.20119f), "xm3_prop_xm3_snowman_01a", new Vector3(0, 0, 72.16058f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(110, new Vector3(-780.3677f, 883.56f, 202.291f), "xm3_prop_xm3_snowman_01a", new Vector3(0, 0, 322.9184f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(111, new Vector3(-455.9423f, 1126.911f, 324.881f), "xm3_prop_xm3_snowman_01c", new Vector3(0, 0, 115.3341f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(112, new Vector3(-1938.353f, 592.8044f, 119.0633f), "xm3_prop_xm3_snowman_01b", new Vector3(0, 0, 243.7932f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(113, new Vector3(-2975.49f, 713.8936f, 27.31553f), "xm3_prop_xm3_snowman_01a", new Vector3(0, 0, 150.4708f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(114, new Vector3(-2829.72f, 1420.274f, 99.9081f), "xm3_prop_xm3_snowman_01c", new Vector3(0, 0, 101.7738f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(115, new Vector3(-1517.235f, 2141.644f, 55.04519f), "xm3_prop_xm3_snowman_01b", new Vector3(0, 0, 59.7851f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(116, new Vector3(237.1049f, 3104.991f, 41.40403f), "xm3_prop_xm3_snowman_01a", new Vector3(0, 0, 273.4308f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(117, new Vector3(-45.83523f, 1963.668f, 188.9175f), "xm3_prop_xm3_snowman_01a", new Vector3(0, 0, 206.5635f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(118, new Vector3(1517.938f, 1721.99f, 109.3151f), "xm3_prop_xm3_snowman_01c", new Vector3(0, 0, 268.1374f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(119, new Vector3(2358.468f, 2529.208f, 45.66771f), "xm3_prop_xm3_snowman_01b", new Vector3(0, 0, 139.9507f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(120, new Vector3(1990.175f, 3828.437f, 31.31994f), "xm3_prop_xm3_snowman_01c", new Vector3(0, 0, 123.5808f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(121, new Vector3(1710.18f, 4678.234f, 42.00475f), "xm3_prop_xm3_snowman_01a", new Vector3(0, 0, 272.4192f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(122, new Vector3(3314.99f, 5166.145f, 17.41536f), "xm3_prop_xm3_snowman_01c", new Vector3(0, 0, 49.55465f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(123, new Vector3(1557.443f, 6450.205f, 22.8588f), "xm3_prop_xm3_snowman_01b", new Vector3(0, 0, 52.68993f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(124, new Vector3(-372.9646f, 6231.026f, 30.49033f), "xm3_prop_xm3_snowman_01a", new Vector3(0, 0, 14.55843f), CollectibleType.Snowmen, -1));
-        collectibles.Add(new CollectibleItem(125, new Vector3(-1418.132f, 5099.072f, 59.46623f), "xm3_prop_xm3_snowman_01b", new Vector3(0, 0, 4.661358f), CollectibleType.Snowmen, -1));
+        if (config.GetValue<int>("SPAWN_SETTINGS", "Snowmen", 1) == 1)
+        {
+            for (int i = 100; i < 126; i++)
+            {
+                collectibles.Add(new CollectibleItem(i, CollectList.GetSnowmanPosition(i), CollectList.GetSnowmanModelName(i), CollectList.GetSnowmanRotation(i), CollectibleType.Snowmen, -1));
+            }
+            menu.Add(snowmen);
+        }
 
         //Ghosts 2024
-        collectibles.Add(new CollectibleItem(126, new Vector3(-1725.097f, -192.2232f, 59.09193f), "m23_1_prop_m31_ghostrurmeth_01a", new Vector3(0, 0, -101.9999f), CollectibleType.Ghosts, 19));
-        collectibles.Add(new CollectibleItem(127, new Vector3(140.4723f, -1193.647f, 28.689f), "m23_1_prop_m31_ghostskidrow_01a", new Vector3(0, 0, 278.6193f), CollectibleType.Ghosts, 20));
-        collectibles.Add(new CollectibleItem(128, new Vector3(1294.687f, -1591.017f, 52.16328f), "m23_1_prop_m31_ghostsalton_01a", new Vector3(0, 0, 143.4934f), CollectibleType.Ghosts, 21));
-        collectibles.Add(new CollectibleItem(129, new Vector3(-541.5305f, -2226.789f, 120.8702f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 55.16325f), CollectibleType.Ghosts, 22));
-        collectibles.Add(new CollectibleItem(130, new Vector3(-1798.732f, 441.6353f, 141.6041f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 170.0002f), CollectibleType.Ghosts, 23));
-        collectibles.Add(new CollectibleItem(131, new Vector3(1003.489f, -2148.367f, 37.33975f), "m23_1_prop_m31_ghostskidrow_01a", new Vector3(0, 0, 85.47829f), CollectibleType.Ghosts, 1));
-        collectibles.Add(new CollectibleItem(132, new Vector3(-759.3058f, -20.97644f, 56.45779f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 30.00001f), CollectibleType.Ghosts, 2));
-        collectibles.Add(new CollectibleItem(133, new Vector3(-765.3237f, -694.7315f, 69.23154f), "m23_1_prop_m31_ghostrurmeth_01a", new Vector3(0, 0, 15f), CollectibleType.Ghosts, 4));
-        collectibles.Add(new CollectibleItem(134, new Vector3(960.7609f, -216.1422f, 75.25533f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 182.5328f), CollectibleType.Ghosts, 5));
-        collectibles.Add(new CollectibleItem(135, new Vector3(1652.198f, -23.00671f, 132.7253f), "m24_1_prop_m41_ghost_dom_01a", new Vector3(0, 0, 298.3338f), CollectibleType.Ghosts, 0));
-
-        //Ghosts 2023
-        collectibles.Add(new CollectibleItem(136, new Vector3(1907.59f, 4931.752f, 53.89161f), "m23_1_prop_m31_ghostrurmeth_01a", new Vector3(0, 0, 144.9998f), CollectibleType.Ghosts, 20));
-        collectibles.Add(new CollectibleItem(137, new Vector3(1493.806f, 3641.064f, 34.51352f), "m23_1_prop_m31_ghostskidrow_01a", new Vector3(0, 0, 0), CollectibleType.Ghosts, 21));
-        collectibles.Add(new CollectibleItem(138, new Vector3(2768.155f, 4237.339f, 47.88669f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 182.4814f), CollectibleType.Ghosts, 22));
-        collectibles.Add(new CollectibleItem(139, new Vector3(3418.761f, 5163.107f, 4.861958f), "m23_1_prop_m31_ghostrurmeth_01a", new Vector3(0, 0, 17.25412f), CollectibleType.Ghosts, 23));
-        collectibles.Add(new CollectibleItem(140, new Vector3(165.5603f, 3118.98f, 45.2349f), "m23_1_prop_m31_ghostsalton_01a", new Vector3(0, 0, 45f), CollectibleType.Ghosts, 1));
-        collectibles.Add(new CollectibleItem(141, new Vector3(-278.4065f, 2844.814f, 52.93954f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 324.4669f), CollectibleType.Ghosts, 2));
-        collectibles.Add(new CollectibleItem(142, new Vector3(56.36493f, 6647.847f, 35.58109f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, -2f), CollectibleType.Ghosts, 3));
-        collectibles.Add(new CollectibleItem(143, new Vector3(-1643.409f, 2088.244f, 86.05696f), "m23_1_prop_m31_ghostrurmeth_01a", new Vector3(0, 0, 91.55879f), CollectibleType.Ghosts, 4));
-        collectibles.Add(new CollectibleItem(144, new Vector3(-530.715f, 4534.124f, 100.1169f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 0), CollectibleType.Ghosts, 5));
-        collectibles.Add(new CollectibleItem(145, new Vector3(2014.283f, 3830.398f, 32.43386f), "m23_1_prop_m31_ghostjohnny_01a", new Vector3(0, 0, 339.7408f), CollectibleType.Ghosts, 0));
-
+        if (config.GetValue<int>("SPAWN_SETTINGS", "Ghosts", 1) == 1)
+        {
+            collectibles.Add(new CollectibleItem(126, new Vector3(-1725.097f, -192.2232f, 59.09193f), "m23_1_prop_m31_ghostrurmeth_01a", new Vector3(0, 0, -101.9999f), CollectibleType.Ghosts, 19));
+            collectibles.Add(new CollectibleItem(127, new Vector3(140.4723f, -1193.647f, 28.689f), "m23_1_prop_m31_ghostskidrow_01a", new Vector3(0, 0, 278.6193f), CollectibleType.Ghosts, 20));
+            collectibles.Add(new CollectibleItem(128, new Vector3(1294.687f, -1591.017f, 52.16328f), "m23_1_prop_m31_ghostsalton_01a", new Vector3(0, 0, 143.4934f), CollectibleType.Ghosts, 21));
+            collectibles.Add(new CollectibleItem(129, new Vector3(-541.5305f, -2226.789f, 120.8702f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 55.16325f), CollectibleType.Ghosts, 22));
+            collectibles.Add(new CollectibleItem(130, new Vector3(-1798.732f, 441.6353f, 141.6041f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 170.0002f), CollectibleType.Ghosts, 23));
+            collectibles.Add(new CollectibleItem(131, new Vector3(1003.489f, -2148.367f, 37.33975f), "m23_1_prop_m31_ghostskidrow_01a", new Vector3(0, 0, 85.47829f), CollectibleType.Ghosts, 1));
+            collectibles.Add(new CollectibleItem(132, new Vector3(-759.3058f, -20.97644f, 56.45779f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 30.00001f), CollectibleType.Ghosts, 2));
+            collectibles.Add(new CollectibleItem(133, new Vector3(-765.3237f, -694.7315f, 69.23154f), "m23_1_prop_m31_ghostrurmeth_01a", new Vector3(0, 0, 15f), CollectibleType.Ghosts, 4));
+            collectibles.Add(new CollectibleItem(134, new Vector3(960.7609f, -216.1422f, 75.25533f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 182.5328f), CollectibleType.Ghosts, 5));
+            collectibles.Add(new CollectibleItem(135, new Vector3(1652.198f, -23.00671f, 132.7253f), "m24_1_prop_m41_ghost_dom_01a", new Vector3(0, 0, 298.3338f), CollectibleType.Ghosts, 0));
+            collectibles.Add(new CollectibleItem(136, new Vector3(1907.59f, 4931.752f, 53.89161f), "m23_1_prop_m31_ghostrurmeth_01a", new Vector3(0, 0, 144.9998f), CollectibleType.Ghosts, 20));
+            collectibles.Add(new CollectibleItem(137, new Vector3(1493.806f, 3641.064f, 34.51352f), "m23_1_prop_m31_ghostskidrow_01a", new Vector3(0, 0, 0), CollectibleType.Ghosts, 21));
+            collectibles.Add(new CollectibleItem(138, new Vector3(2768.155f, 4237.339f, 47.88669f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 182.4814f), CollectibleType.Ghosts, 22));
+            collectibles.Add(new CollectibleItem(139, new Vector3(3418.761f, 5163.107f, 4.861958f), "m23_1_prop_m31_ghostrurmeth_01a", new Vector3(0, 0, 17.25412f), CollectibleType.Ghosts, 23));
+            collectibles.Add(new CollectibleItem(140, new Vector3(165.5603f, 3118.98f, 45.2349f), "m23_1_prop_m31_ghostsalton_01a", new Vector3(0, 0, 45f), CollectibleType.Ghosts, 1));
+            collectibles.Add(new CollectibleItem(141, new Vector3(-278.4065f, 2844.814f, 52.93954f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 324.4669f), CollectibleType.Ghosts, 2));
+            collectibles.Add(new CollectibleItem(142, new Vector3(56.36493f, 6647.847f, 35.58109f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, -2f), CollectibleType.Ghosts, 3));
+            collectibles.Add(new CollectibleItem(143, new Vector3(-1643.409f, 2088.244f, 86.05696f), "m23_1_prop_m31_ghostrurmeth_01a", new Vector3(0, 0, 91.55879f), CollectibleType.Ghosts, 4));
+            collectibles.Add(new CollectibleItem(144, new Vector3(-530.715f, 4534.124f, 100.1169f), "m23_1_prop_m31_ghostzombie_01a", new Vector3(0, 0, 0), CollectibleType.Ghosts, 5));
+            collectibles.Add(new CollectibleItem(145, new Vector3(2014.283f, 3830.398f, 32.43386f), "m23_1_prop_m31_ghostjohnny_01a", new Vector3(0, 0, 339.7408f), CollectibleType.Ghosts, 0));
+            menu.Add(ghosts);
+        }
 
         //Movie Props
-        collectibles.Add(new CollectibleItem(146, new Vector3(-1010.02f, -502.11f, 36.45f), "sum_prop_ac_filmreel_01a", new Vector3(0, -87.75f, 119.7253f), CollectibleType.MovieProps, -1));
-        collectibles.Add(new CollectibleItem(147, new Vector3(94.22f, -1294.82f, 29.07f), "sum_prop_ac_wifaaward_01a", new Vector3(0, 0, 0), CollectibleType.MovieProps, -1));
-        collectibles.Add(new CollectibleItem(148, new Vector3(930.98f, 42.64f, 80.86f), "sum_prop_ac_headdress_01a", new Vector3(1.600825E-06f, -87.75067f, -127.4983f), CollectibleType.MovieProps, -1));
-        collectibles.Add(new CollectibleItem(149, new Vector3(2517.236f, 3789.5f, 53.70103f), "sum_prop_ac_alienhead_01a", new Vector3(0, 0, -64.99996f), CollectibleType.MovieProps, -1));
-        collectibles.Add(new CollectibleItem(150, new Vector3(-41.72f, 2873.13f, 59.62f), "sum_prop_ac_mummyhead_01a", new Vector3(1.001787E-05f, 5.008956E-06f, 61.49989f), CollectibleType.MovieProps, -1));
-        collectibles.Add(new CollectibleItem(151, new Vector3(-2349.01f, 3270.81f, 32.9f), "sum_prop_ac_clapperboard_01a", new Vector3(45.74618f, 0.6436573f, 48.80944f), CollectibleType.MovieProps, -1));
-        collectibles.Add(new CollectibleItem(152, new Vector3(-1170.086f, 4927.163f, 223.7f), "sum_prop_ac_monstermask_01a", new Vector3(1.001789E-05f, 5.008955E-06f, 109.9997f), CollectibleType.MovieProps, -1));
-        collectibles.Add(new CollectibleItem(153, new Vector3(-668.545f, 80.07295f, 51.15895f), "sum_prop_ac_sarcophagus_01a", new Vector3(0, 0, 271.0984f), CollectibleType.MovieProps, -1));
-        collectibles.Add(new CollectibleItem(154, new Vector3(463.3454f, -736.3801f, 27.36179f), "sum_prop_ac_tigerrug_01a", new Vector3(0, 0, 180.4602f), CollectibleType.MovieProps, -1));
-        collectibles.Add(new CollectibleItem(155, new Vector3(-77.77018f, 6537.488f, 31.49081f), "sum_prop_ac_drinkglobe_01a", new Vector3(0, 0, 315.4369f), CollectibleType.MovieProps, -1));
-    
-        //LD Organics
-        for (int i = 156; i < 256; i++)
+        if (config.GetValue<int>("SPAWN_SETTINGS", "MovieProps", 1) == 1)
         {
-            collectibles.Add(new CollectibleItem(i, CollectList.GetLDPosition(i), "reh_prop_reh_bag_weed_01a", CollectList.GetLDRotation(i), CollectibleType.LdWare, -1));
+            for (int i = 146; i < 156; i++)
+            {
+                collectibles.Add(new CollectibleItem(i, CollectList.GetMoviePropsPosition(i), CollectList.GetMoviePropsModelName(i), CollectList.GetMoviePropsRotate(i), CollectibleType.MovieProps, -1));
+            }
+            menu.Add(props);
+        }
+
+        //LD Organics
+        if (config.GetValue<int>("SPAWN_SETTINGS", "LDOrganics", 1) == 1)
+        {
+            for (int i = 156; i < 256; i++)
+            {
+                collectibles.Add(new CollectibleItem(i, CollectList.GetLDPosition(i), "reh_prop_reh_bag_weed_01a", CollectList.GetLDRotation(i), CollectibleType.LdWare, -1));
+            }
+            menu.Add(LDorg);
         }
 
         //Jammers
-        for (int i = 257; i < 307; i++)
+        if (config.GetValue<int>("SPAWN_SETTINGS", "Jammers", 1) == 1)
         {
-            collectibles.Add(new CollectibleItem(i, CollectList.GetJammerPosition(i), "ch_prop_ch_mobile_jammer_01x", CollectList.GetJammerRotation(i), CollectibleType.Jammers, -1));
+            for (int i = 257; i < 307; i++)
+            {
+                collectibles.Add(new CollectibleItem(i, CollectList.GetJammerPosition(i), "ch_prop_ch_mobile_jammer_01x", CollectList.GetJammerRotation(i), CollectibleType.Jammers, -1));
+            }
+            menu.Add(signal);
         }
 
         //Playing cards
-        for (int i = 308; i < 362; i++)
+        if (config.GetValue<int>("SPAWN_SETTINGS", "PlayingCards", 1) == 1)
         {
-            collectibles.Add(new CollectibleItem(i, CollectList.GetPlayingCardsPosition(i), "vw_prop_vw_lux_card_01a", CollectList.GetPlayingCardsRotation(i), CollectibleType.PlayingCards, -1));
+            for (int i = 308; i < 362; i++)
+            {
+                collectibles.Add(new CollectibleItem(i, CollectList.GetPlayingCardsPosition(i), "vw_prop_vw_lux_card_01a", CollectList.GetPlayingCardsRotation(i), CollectibleType.PlayingCards, -1));
+            }
+            menu.Add(cards);
         }
 
         //Jack O’ Lanterns
-        for (int i = 363; i < 563; i++)
+        if (config.GetValue<int>("SPAWN_SETTINGS", "JackLanterns", 1) == 1)
         {
-            collectibles.Add(new CollectibleItem(i, CollectList.GetLanternsPosition(i), CollectList.GetLanernsModelName(i), CollectList.GetLanternsRotation(i), CollectibleType.Lanterns, -1));
+            for (int i = 363; i < 563; i++)
+            {
+                collectibles.Add(new CollectibleItem(i, CollectList.GetLanternsPosition(i), CollectList.GetLanernsModelName(i), CollectList.GetLanternsRotation(i), CollectibleType.Lanterns, -1));
+            }
+            menu.Add(lanterns);
         }
 
         //Yuanbao
-        for (int i = 564; i < 600; i++)
+        if (config.GetValue<int>("SPAWN_SETTINGS", "Yuanbao", 1) == 1)
         {
-            collectibles.Add(new CollectibleItem(i, CollectList.GetYuanbaoPosition(i), CollectList.GetYuanbaoModelName(i), CollectList.GetLanternsRotation(i), CollectibleType.Yuanbao, -1));
+            for (int i = 564; i < 600; i++)
+            {
+                collectibles.Add(new CollectibleItem(i, CollectList.GetYuanbaoPosition(i), CollectList.GetYuanbaoModelName(i), CollectList.GetLanternsRotation(i), CollectibleType.Yuanbao, -1));
+            }
+            menu.Add(Yuanbao);
         }
 
+        //Radio Antennas 
+        if (config.GetValue<int>("SPAWN_SETTINGS", "RadioAntennas ", 1) == 1)
+        {
+            for (int i = 600; i < 610; i++)
+            {
+                collectibles.Add(new CollectibleItem(i, CollectList.GetAntePosition(i), CollectList.GetAnteModelName(0), CollectList.GetAnteRotation(i), CollectibleType.RadioAntennas, -1));
+            }
+            menu.Add(antennas);
+        }
     }
 
     private void onkeyup(object sender, KeyEventArgs e)
     {
-        if (e.KeyCode == Keys.Y)
+        if (e.KeyCode == KeyActiveMenu)
         {
             figures.AltTitle = $"{collectedCount[CollectibleType.ActionFigures]}/100";
             snowmen.AltTitle = $"{collectedCount[CollectibleType.Snowmen]}/25";
@@ -384,13 +345,57 @@ public class CollectibleManager : Script
             signal.AltTitle = $"{collectedCount[CollectibleType.Jammers]}/50";
             Yuanbao.AltTitle = $"{collectedCount[CollectibleType.Yuanbao]}/36";
             lanterns.AltTitle = $"{collectedCount[CollectibleType.Lanterns]}/200";
+            antennas.AltTitle = $"{collectedCount[CollectibleType.RadioAntennas]}/10";
             menu.Visible = true;
+        }
+    }
+
+    private void ShowCollectMessage(string title, string subtitle)
+    {
+        scaleformHandle = Function.Call<int>(Hash.REQUEST_SCALEFORM_MOVIE, "MIDSIZED_MESSAGE");
+        while (!Function.Call<bool>(Hash.HAS_SCALEFORM_MOVIE_LOADED, scaleformHandle))
+        {
+            Script.Wait(0);
+        }
+
+        Function.Call(Hash.BEGIN_SCALEFORM_MOVIE_METHOD, scaleformHandle, "SHOW_COND_SHARD_MESSAGE");
+        Function.Call(Hash.SCALEFORM_MOVIE_METHOD_ADD_PARAM_LITERAL_STRING, title); 
+        Function.Call(Hash.SCALEFORM_MOVIE_METHOD_ADD_PARAM_LITERAL_STRING, subtitle);
+        Function.Call(Hash.SCALEFORM_MOVIE_METHOD_ADD_PARAM_INT, 2); // colID
+        Function.Call(Hash.SCALEFORM_MOVIE_METHOD_ADD_PARAM_BOOL, true); // useDarkerShard
+        Function.Call(Hash.END_SCALEFORM_MOVIE_METHOD);
+
+        messageStartTime = Game.GameTime + 10000;
+        messageVisible = true;
+    }
+
+    private void AnimateOut()
+    {
+        Function.Call(Hash.BEGIN_SCALEFORM_MOVIE_METHOD, scaleformHandle, "SHARD_ANIM_OUT");
+        Function.Call(Hash.SCALEFORM_MOVIE_METHOD_ADD_PARAM_INT, 7); // colID
+        Function.Call(Hash.SCALEFORM_MOVIE_METHOD_ADD_PARAM_FLOAT, 0.3f); 
+        Function.Call(Hash.END_SCALEFORM_MOVIE_METHOD);
+
+        messageVisible = false;
+    }
+
+    private void UpdateCollectMessages()
+    {
+        if (scaleformHandle != 0)
+        {
+            Function.Call(Hash.DRAW_SCALEFORM_MOVIE_FULLSCREEN, scaleformHandle, 255, 255, 255, 255, 0);
+        }
+
+        if (messageVisible && Game.GameTime > messageStartTime)
+        {
+            AnimateOut();
         }
     }
 
     private void OnTick(object sender, EventArgs e)
     {
         pool.Process();
+        UpdateCollectMessages();
 
         CheckCollectorRadar();
 
@@ -400,87 +405,9 @@ public class CollectibleManager : Script
 
         var playerPosition = Game.Player.Character.Position;
 
-        if (CacheActive)
-        {
-            if (currentZoneIndex != -1)
-            {
-                float distanceToZone = Vector3.Distance(playerPosition, blipPoint);
-
-                // Если игрок находится в радиусе зоны, показываем Blip, если его еще нет
-                if (distanceToZone <= zoneRadius)
-                {
-                    if (zoneBlip == null)
-                    {
-                        zoneBlip = World.CreateBlip(blipPoint);
-                        zoneBlip.Sprite = (BlipSprite)842; // Иконка на мини-карте
-                        zoneBlip.Color = BlipColor.Purple;
-                    }
-
-                    // При входе в круг Blip меняется на большой белый круг
-                    if (distanceToZone <= 50.0f)
-                    {
-                        zoneBlip.Delete();
-                        zoneBlip = Function.Call<Blip>(Hash.ADD_BLIP_FOR_RADIUS, blipPoint.X, blipPoint.Y, blipPoint.Z, 100.0f);
-                        zoneBlip.Alpha = 50;
-                    }
-                    else
-                    {
-                        zoneBlip.Delete();
-                        zoneBlip = World.CreateBlip(blipPoint);
-                        zoneBlip.Sprite = (BlipSprite)842; // Иконка на мини-карте
-                        zoneBlip.Color = BlipColor.Purple;
-                    }
-
-                    // Спавн пропа в выбранной точке, если он еще не создан
-                    if (geraldProp == null)
-                    {
-                        Model model = new Model("prop_mp_drug_package"); // Название модели пропа
-                        model.Request();
-                        while (!model.IsLoaded) Script.Wait(50);
-
-                        geraldProp = World.CreateProp(model, spawnPoint, true, true);
-                        geraldProp.Rotation = spawnRotation; // Устанавливаем углы поворота
-                        model.MarkAsNoLongerNeeded();
-                    }
-
-                    // Проверяем, если игрок находится рядом с пропом, и он считается найденным
-                    if (geraldProp != null && Vector3.Distance(playerPosition, spawnPoint) <= collectRadius)
-                    {
-                        GTA.UI.Screen.ShowSubtitle("Вы нашли предмет Gerald!");
-                        geraldProp.Delete();
-                        geraldProp = null;
-
-                        // Удаляем Blip и выбираем новую зону
-                        zoneBlip.Delete();
-                        zoneBlip = null;
-                        SelectRandomGeraldZone();
-                    }
-                }
-                else
-                {
-                    // Удаляем Blip и проп при выходе из зоны
-                    if (zoneBlip != null && zoneBlip.Exists())
-                    {
-                        zoneBlip.Delete();
-                        zoneBlip = null;
-                    }
-
-                    if (geraldProp != null && geraldProp.Exists())
-                    {
-                        geraldProp.Delete();
-                        geraldProp = null;
-                    }
-                }
-            }
-            else
-            {
-                SelectRandomGeraldZone();
-            }
-        }
-
         foreach (var collectible in collectibles)
         {
-            if (collectible.Collected || collectedIds.Contains(collectible.Id)) continue;
+            if ((collectible.Collected || collectedIds.Contains(collectible.Id)) && collectible.ModelName != "h4_prop_h4_ante_off_01a") continue;
 
             CheckMovieVehicleActive(collectible);
 
@@ -490,25 +417,135 @@ public class CollectibleManager : Script
             {
                 collectible.Spawn();
 
+                if (collectible.Collected)
+                {
+                    collectible.prop = SwapModelKostyl(collectible.prop);
+                }
+
                 switch (collectible.Type)
                 {
                     case CollectibleType.ActionFigures:
-                    case CollectibleType.LdWare:
                     case CollectibleType.PlayingCards:
-                    case CollectibleType.MediaSticks:
-                    case CollectibleType.Yuanbao:
-                        if (distanceToPlayer <= collectRadius)
+                        if (distanceToPlayer <= collectRadius_without_keys)
                         {
                             collectible.Collect();
+                            collectible.Remove();
                             SaveCollectedId(collectible.Id);
                             IncrementCollectedCount(collectible.Type, collectible.Id);
+                        }
+                        break;
+
+                    case CollectibleType.Lanterns:
+                    case CollectibleType.LdWare:
+                    case CollectibleType.MediaSticks:
+                    case CollectibleType.Yuanbao:
+                    case CollectibleType.RadioAntennas:
+
+                        if (distanceToPlayer <= 1.5f && !collectible.Collected)
+                        {
+
+                            switch(collectible.Type)
+                            {
+                                case CollectibleType.LdWare:
+                                    GTA.UI.Screen.ShowHelpTextThisFrame(Game.GetLocalizedString("CONTEXT_COLLEORG"));
+                                    break;
+
+                                case CollectibleType.Lanterns:
+                                    GTA.UI.Screen.ShowHelpTextThisFrame(Game.GetLocalizedString("CONTEXT_COLLETRICK"));
+                                    break;
+
+                                case CollectibleType.MediaSticks:
+                                    GTA.UI.Screen.ShowHelpTextThisFrame(Game.GetLocalizedString("CONTEXT_COLLECC"));
+                                    break;
+
+                                case CollectibleType.Yuanbao:
+                                    GTA.UI.Screen.ShowHelpTextThisFrame(Game.GetLocalizedString("COL24CNYHELPCAN"));
+                                    break;
+
+                                case CollectibleType.RadioAntennas:
+                                    GTA.UI.Screen.ShowHelpTextThisFrame(Game.GetLocalizedString("CONRAD_COLLEC"));
+                                    break;
+                            }
+
+                            if (Function.Call<bool>(Hash.IS_CONTROL_PRESSED, 0, 51))
+                            {
+                                int time_anim = 1000;
+                                int scene = 0;
+                                Vector3 toItemDirection = (collectible.prop.Position - Game.Player.Character.Position).Normalized;
+                                Game.Player.Character.Task.LookAt(collectible.prop.Position, 2000);
+                                Game.Player.Character.Heading = Function.Call<float>(Hash.GET_HEADING_FROM_VECTOR_2D, toItemDirection.X, toItemDirection.Y);
+
+                                if (collectible.Type == CollectibleType.Lanterns)
+                                {
+                                    Function.Call(Hash.REQUEST_ANIM_DICT, "anim@scripted@player@freemode@tun_prep_ig1_grab_low@male@");
+                                    while (!Function.Call<bool>(Hash.HAS_ANIM_DICT_LOADED, "anim@scripted@player@freemode@tun_prep_ig1_grab_low@male@")) Script.Wait(0);
+                                    Game.Player.Character.Task.PlayAnimation("anim@scripted@player@freemode@tun_prep_ig1_grab_low@male@", "grab_low", 8.0f, -8.0f, -1, AnimationFlags.HideWeapon, 0.0f);
+                                }
+                                else if (collectible.Type == CollectibleType.RadioAntennas)
+                                {
+                                    Vector3 scenePos = CollectList.GetAntePosition(collectible.Id);
+                                    Vector3 sceneRot = CollectList.GetAnteRotation(collectible.Id);
+                                    scene = Function.Call<int>(Hash.CREATE_SYNCHRONIZED_SCENE, scenePos.X, scenePos.Y, scenePos.Z, sceneRot.X, sceneRot.Y, sceneRot.Z, 2);
+                                    Function.Call(Hash.SET_SYNCHRONIZED_SCENE_LOOPED, scene, false);
+
+                                    Model model = new Model("h4_prop_h4_ante_on_01a");
+                                    model.Request();
+                                    while (!model.IsLoaded) Script.Wait(50);
+
+                                    Function.Call(Hash.REQUEST_ANIM_DICT, "anim@scripted@heist@ig2_hand_lever@heeled@");
+                                    while (!Function.Call<bool>(Hash.HAS_ANIM_DICT_LOADED, "anim@scripted@heist@ig2_hand_lever@heeled@")) Script.Wait(0);
+
+
+                                    float durationTime = Function.Call<float>(Hash.GET_ANIM_DURATION, "anim@scripted@heist@ig2_hand_lever@heeled@", "ENTER_ANTE_OFF");
+
+
+                                    Function.Call(Hash.SET_PED_CURRENT_WEAPON_VISIBLE, Game.Player.Character, false, false, false, false);
+
+                                    Function.Call(Hash.TASK_SYNCHRONIZED_SCENE, Game.Player.Character, scene, "anim@scripted@heist@ig2_hand_lever@heeled@", "ENTER_HEELED", 1000.0, -4.0, 1, 0, 0x447a0000, 0);
+                                    Function.Call(Hash.PLAY_SYNCHRONIZED_ENTITY_ANIM, collectible.prop, scene, "ENTER_ANTE_OFF", "anim@scripted@heist@ig2_hand_lever@heeled@", 1000.0, -1000.0, 0, 0x447a0000);
+                                    Function.Call(Hash.SET_SYNCHRONIZED_SCENE_PHASE, scene, 0.0);
+                                    Wait((int)durationTime * 1000);
+
+                                    Function.Call(Hash.DETACH_SYNCHRONIZED_SCENE, scene);
+
+                                    collectible.prop = SwapModelKostyl(collectible.prop);
+
+                                    scene = Function.Call<int>(Hash.CREATE_SYNCHRONIZED_SCENE, scenePos.X, scenePos.Y, scenePos.Z, sceneRot.X, sceneRot.Y, sceneRot.Z, 2);
+                                    Function.Call(Hash.SET_SYNCHRONIZED_SCENE_LOOPED, scene, false);
+                                    Function.Call(Hash.TASK_SYNCHRONIZED_SCENE, Game.Player.Character, scene, "anim@scripted@heist@ig2_hand_lever@heeled@", "EXIT_HEELED", 1000.0, -4.0, 1, 0, 0x447a0000, 0);
+                                    Function.Call(Hash.PLAY_SYNCHRONIZED_ENTITY_ANIM, collectible.prop, scene, "EXIT_ANTE_OFF", "anim@scripted@heist@ig2_hand_lever@heeled@", 1000.0, -1000.0, 0, 0x447a0000);
+                                }
+                                else
+                                {
+                                    Function.Call(Hash.REQUEST_ANIM_DICT, "anim@scripted@player@freemode@tun_prep_grab_midd_ig3@male@");
+                                    while (!Function.Call<bool>(Hash.HAS_ANIM_DICT_LOADED, "anim@scripted@player@freemode@tun_prep_grab_midd_ig3@male@")) Script.Wait(0);
+                                    Game.Player.Character.Task.PlayAnimation("anim@scripted@player@freemode@tun_prep_grab_midd_ig3@male@", "tun_prep_grab_midd_ig3", 8.0f, -8.0f, -1, AnimationFlags.UpperBodyOnly, 0.0f);
+                                }
+
+                                Wait(time_anim);
+
+                                collectible.Collect();
+
+                                if (collectible.Type != CollectibleType.RadioAntennas) collectible.Remove();
+
+                                SaveCollectedId(collectible.Id);
+                                IncrementCollectedCount(collectible.Type, collectible.Id);
+
+                                Function.Call(Hash.REMOVE_ANIM_DICT, "anim@scripted@player@freemode@tun_prep_grab_midd_ig3@male@");
+                                Function.Call(Hash.REMOVE_ANIM_DICT, "anim@scripted@player@freemode@tun_prep_ig1_grab_low@male@");
+
+                                Function.Call(Hash.DETACH_SYNCHRONIZED_SCENE, scene);
+                                Function.Call(Hash.SET_PED_CURRENT_WEAPON_VISIBLE, Game.Player.Character, true, false, false, false);
+                                Function.Call(Hash.CLEAR_PED_TASKS_IMMEDIATELY, Game.Player.Character);
+                            }
                         }
                         break;
 
                     case CollectibleType.Snowmen:
                         if (collectible.prop != null && Function.Call<bool>(Hash.IS_ENTITY_DEAD, collectible.prop, false))
                         {
-                            Wait(500);
+                            Function.Call(Hash.SET_ENTITY_HEALTH, collectible.prop, 0, 0, 0);
+
                             Function.Call(Hash.PLAY_SOUND_FROM_COORD,
                                 -1,
                                 "destroy",
@@ -521,6 +558,7 @@ public class CollectibleManager : Script
                                 false);
 
                             collectible.Collect();
+                            collectible.MarkAsNoLongerNeeded();
                             SaveCollectedId(collectible.Id);
                             IncrementCollectedCount(collectible.Type, collectible.Id);
                         }
@@ -542,15 +580,7 @@ public class CollectibleManager : Script
                                 false);
 
                             collectible.Collect();
-                            SaveCollectedId(collectible.Id);
-                            IncrementCollectedCount(collectible.Type, collectible.Id);
-                        }
-                        break;
-
-                    case CollectibleType.Lanterns:
-                        if (collectible.prop != null && Function.Call<bool>(Hash.IS_ENTITY_DEAD, collectible.prop, false))
-                        {
-                            collectible.Collect();
+                            collectible.Remove();
                             SaveCollectedId(collectible.Id);
                             IncrementCollectedCount(collectible.Type, collectible.Id);
                         }
@@ -558,12 +588,13 @@ public class CollectibleManager : Script
 
                     case CollectibleType.Ghosts:
                         if (Function.Call<bool>(Hash.PHONEPHOTOEDITOR_IS_ACTIVE) &&
-                        Function.Call<bool>(Hash.IS_CONTROL_PRESSED, 0, 176)) // 176 - это клавиша ENTER на геймпаде для съёмки
+                        Function.Call<bool>(Hash.IS_CONTROL_PRESSED, 0, 176)) // ENTER
                         {
                             if(IsGhostInPhoto(collectible.prop))
                             {
                                 Wait(1000);
                                 collectible.Collect();
+                                collectible.Remove();
                                 SaveCollectedId(collectible.Id);
                                 IncrementCollectedCount(collectible.Type, collectible.Id);
                             }
@@ -577,7 +608,7 @@ public class CollectibleManager : Script
                         }
                         else
                         {
-                            if (distanceToPlayer <= collectRadius)
+                            if (distanceToPlayer <= collectRadius_without_keys)
                             {
                                 GTA.UI.Screen.ShowHelpText(Game.GetLocalizedString("MOVPROPDELHELP"));
                                 collectible.Remove();
@@ -678,10 +709,14 @@ public class CollectibleManager : Script
     {
         if (collectedCount[CollectibleType.Jammers] == 50)
         {
-            Function.Call(Hash.LOCK_RADIO_STATION, "RADIO_27_DLC_PRHEI4", false);
             Function.Call(Hash.LOCK_RADIO_STATION, "RADIO_34_DLC_HEI4_KULT", false);
             Function.Call(Hash.LOCK_RADIO_STATION, "RADIO_35_DLC_HEI4_MLR", false);
             Function.Call(Hash.LOCK_RADIO_STATION, "RADIO_37_MOTOMAMI", false);
+        }
+
+        if (collectedCount[CollectibleType.RadioAntennas] == 10)
+        {
+            Function.Call(Hash.LOCK_RADIO_STATION, "RADIO_27_DLC_PRHEI4", false);
         }
     }
 
@@ -734,7 +769,8 @@ public class CollectibleManager : Script
                         break;
 
                     case CollectibleType.Jammers:
-                        if (collectedCount[CollectibleType.Jammers] == 50)
+                    case CollectibleType.RadioAntennas:
+                        if (collectedCount[CollectibleType.Jammers] == 50 || collectedCount[CollectibleType.RadioAntennas] == 10)
                         {
                             Game.Player.Money += 100000;
                             UnlockRadioStations();
@@ -832,116 +868,92 @@ public class CollectibleManager : Script
         }
     }
 
-    private void SelectRandomGeraldZone()
-    {
-        Random random = new Random();
-        int newZoneIndex;
-
-        // Выбираем новую случайную зону, отличную от текущей
-        do
-        {
-            newZoneIndex = random.Next(geraldZones.Count);
-        } while (newZoneIndex == currentZoneIndex);
-
-        currentZoneIndex = newZoneIndex;
-
-        // Первая точка используется для Blip и круга
-        blipPoint = geraldZones[currentZoneIndex][0].Position;
-
-        // Копируем оставшиеся точки (со 2-й по последнюю) в массив spawnPoints
-        spawnPoints = new SpawnPoint[geraldZones[currentZoneIndex].Length - 1];
-        Array.Copy(geraldZones[currentZoneIndex], 1, spawnPoints, 0, spawnPoints.Length);
-
-        // Выбираем случайную точку из spawnPoints для спавна пропа
-        SpawnPoint selectedSpawnPoint = spawnPoints[random.Next(spawnPoints.Length)];
-        spawnPoint = selectedSpawnPoint.Position;
-        spawnRotation = selectedSpawnPoint.Rotation;
-    }
-
-
     private void IncrementCollectedCount(CollectibleType type, int id)
     {
 
         collectedCount[type]++;
+        string title = "";
+        string subtitle = "";
 
         switch (type)
         {
             case CollectibleType.ActionFigures:
-                bigMessage.Title = Game.GetLocalizedString("FIGURE_HEADER");
-                bigMessage.Message = ReplacePlaceholder(Game.GetLocalizedString("FIGURE_COLLECT"), collectedCount[type]);
+                title = Game.GetLocalizedString("FIGURE_HEADER");
+                subtitle = ReplacePlaceholder(Game.GetLocalizedString("FIGURE_COLLECT"), collectedCount[type]);
                 Notification.PostTicker(ReplacePlaceholder(Game.GetLocalizedString("FIGURE_TICKER"), collectedCount[type]), true);
                 Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, CollectList.GetAudioFigures(id), "dlc_vw_hidden_collectible_sounds", false);
                 break;
 
             case CollectibleType.LdWare:
-                bigMessage.Title = Game.GetLocalizedString("ORGANI_HEADER");
-                bigMessage.Message = ReplacePlaceholder(Game.GetLocalizedString("ORGANI_COLLECT"), collectedCount[type]);
+                title = Game.GetLocalizedString("ORGANI_HEADER");
+                subtitle = ReplacePlaceholder(Game.GetLocalizedString("ORGANI_COLLECT"), collectedCount[type]);
                 Notification.PostTicker(ReplacePlaceholder(Game.GetLocalizedString("ORGANI_TICKER"), collectedCount[type]), true);
                 Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "Collect", "LD_Organics_sounds", false);
                 break;
 
             case CollectibleType.PlayingCards:
-                bigMessage.Title = Game.GetLocalizedString("CARD_HEADER");
-                bigMessage.Message = ReplacePlaceholder(Game.GetLocalizedString("CARD_COLLECT"), collectedCount[type]);
+                title = Game.GetLocalizedString("CARD_HEADER");
+                subtitle = ReplacePlaceholder(Game.GetLocalizedString("CARD_COLLECT"), collectedCount[type]);
                 Notification.PostTicker(ReplacePlaceholder(Game.GetLocalizedString("CARD_TICKER"), collectedCount[type]), true);
                 Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "playing_card", "dlc_vw_hidden_collectible_sounds", false);
                 break;
 
             case CollectibleType.Yuanbao:
-                bigMessage.Title = Game.GetLocalizedString("YUANBAO_HEADER");
-                bigMessage.Message = ReplacePlaceholders(Game.GetLocalizedString("YUANBAO_COLLECT"), new int[] { collectedCount[type], 10 });
-                Notification.PostTicker(ReplacePlaceholders(Game.GetLocalizedString("YUANBAO_TICKER"), new int[] { collectedCount[type], 10 }), true);
+                title = Game.GetLocalizedString("YUANBAO_HEADER");
+                subtitle = ReplacePlaceholders(Game.GetLocalizedString("YUANBAO_COLLECT"), new int[] { collectedCount[type], 36 });
+                Notification.PostTicker(ReplacePlaceholders(Game.GetLocalizedString("YUANBAO_TICKER"), new int[] { collectedCount[type], 36 }), true);
                 Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "Collect", "DLC_24-2_Lunar_New_Year_Collectible_Sounds", false);
                 break;
 
             case CollectibleType.Snowmen:
-                bigMessage.Title = Game.GetLocalizedString("SNOWMEN_HEADER");
-                bigMessage.Message = ReplacePlaceholder(Game.GetLocalizedString("SNOWMEN_COLLECT"), collectedCount[type]);
+                title = Game.GetLocalizedString("SNOWMEN_HEADER");
+                subtitle = ReplacePlaceholder(Game.GetLocalizedString("SNOWMEN_COLLECT"), collectedCount[type]);
                 Notification.PostTicker(ReplacePlaceholder(Game.GetLocalizedString("SNOWMEN_TICKER"), collectedCount[type]), true);
                 Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "destroy", "Snowmen_Colllectible_Sounds", false);
                 break;
 
             case CollectibleType.Ghosts:
-                bigMessage.Title = Game.GetLocalizedString("SUM23GHSHARDHE");
-                bigMessage.Message = ReplacePlaceholdersAndNumber(Game.GetLocalizedString("SUM23GHSHABOD1"), collectedCount[type], 10, 20);
+                title = Game.GetLocalizedString("SUM23GHSHARDHE");
+                subtitle = ReplacePlaceholdersAndNumber(Game.GetLocalizedString("SUM23GHSHABOD1"), collectedCount[type], 10, 20);
                 Notification.PostTicker(ReplacePlaceholdersAndNumber(Game.GetLocalizedString("GHOSTHUNT_HELPCOL"), collectedCount[type], 10, 20), true);
                 Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "Collect_Shard", "Ghost_Hunt_Sounds", false);
                 break;
 
             case CollectibleType.MovieProps:
-                bigMessage.Title = Game.GetLocalizedString("PROPS_HEADER");
-                bigMessage.Message = ReplacePlaceholder(Game.GetLocalizedString("PROPS_COLLECT"), collectedCount[type]);
+                title = Game.GetLocalizedString("PROPS_HEADER");
+                subtitle = ReplacePlaceholder(Game.GetLocalizedString("PROPS_COLLECT"), collectedCount[type]);
                 GTA.UI.Notification.PostTicker(ReplacePlaceholder(Game.GetLocalizedString("PROPS_TICKER"), collectedCount[type]), true);
                 Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "movie_prop", "DLC_SUM20_HIDDEN_COLLECTIBLES", false);
                 break;
 
             case CollectibleType.Jammers:
                 Function.Call<bool>(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_CM2022/CM2022_FREEMODE_01", false, -1);
-                bigMessage.Title = Game.GetLocalizedString("SIGNAL_HEADER");
-                bigMessage.Message = ReplacePlaceholder(Game.GetLocalizedString("SIGNAL_COLLECT2"), collectedCount[type]);
+                title = Game.GetLocalizedString("SIGNAL_HEADER");
+                subtitle = ReplacePlaceholder(Game.GetLocalizedString("SIGNAL_COLLECT2"), collectedCount[type]);
                 GTA.UI.Notification.PostTicker(ReplacePlaceholder(Game.GetLocalizedString("SIGNAL_COLLECT"), collectedCount[type]), true);
-                Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "destroy", "Snowmen_Colllectible_Sounds", false);
+                Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "destroyed", "dlc_ch_hidden_collectibles_sj_sounds", false);
                 break;
 
             case CollectibleType.Lanterns:
-                bigMessage.Title = Game.GetLocalizedString("TRICK_HEADER");
-                bigMessage.Message = ReplacePlaceholdersAndNumber(Game.GetLocalizedString("TRICK_COLLECT"), collectedCount[type], 10, 200);
+                title = Game.GetLocalizedString("TRICK_HEADER");
+                subtitle = ReplacePlaceholdersAndNumber(Game.GetLocalizedString("TRICK_COLLECT"), collectedCount[type], 10, 200);
                 Notification.PostTicker(ReplacePlaceholdersAndNumber(Game.GetLocalizedString("TRICK_TICKER"), collectedCount[type], 10, 200), true);
                 Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "Collect_Treat", "Trick_Or_Treat_sounds", false);
                 break;
+
+            case CollectibleType.RadioAntennas:
+                title = Game.GetLocalizedString("RADST_HEADER");
+                subtitle = ReplacePlaceholder(Game.GetLocalizedString("RADST_COLLECT"), collectedCount[type]);
+                GTA.UI.Notification.PostTicker(ReplacePlaceholder(Game.GetLocalizedString("RADST_TICKER"), collectedCount[type]), true);
+                Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "radio_tower_shard_single", "dlc_hei4_hidden_collectibles_sounds", false);
+                break;
         }
 
-        bigMessage.Visible = true;
-        bigMessage.Draw();
-        bigMessage.FadeOut(8000);
+        ShowCollectMessage(title, subtitle);
     }
 
     private void OnAborted(object sender, EventArgs e)
     {
-        foreach (Blip test in test_jammers)
-        {
-            if (test != null && test.Exists()) test.Delete();
-        }
 
         foreach (var collectible in collectibles)
         {
@@ -950,22 +962,6 @@ public class CollectibleManager : Script
 
         RemoveAllCollectorBlips();
 
-        // Удаляем Blip, если он существует
-        if (zoneBlip != null && zoneBlip.Exists())
-        {
-            zoneBlip.Delete();
-        }
-
-        if (Solomon != null && Solomon.Exists())
-        {
-            Solomon.Delete();
-        }
-
-        // Удаляем Prop, если он существует
-        if (geraldProp != null && geraldProp.Exists())
-        {
-            geraldProp.Delete();
-        }
     }
 
     private void LoadCollectedData()
@@ -1027,19 +1023,29 @@ public class CollectibleManager : Script
         return result;
     }
 
-    private async void WaitAndFadeOutMessage(int delay)
+    static Prop SwapModelKostyl(Prop prop)
     {
-        // Ожидание указанное время (10 секунд)
-        await Task.Delay(delay);
+        Model ante_on = new Model("h4_prop_h4_ante_on_01a");
+        ante_on.Request(500);
 
-        // Запуск анимации исчезновения на 1 секунду (1000 мс)
-        bigMessage.FadeOut(1000);
+        while (!ante_on.IsLoaded) Script.Wait(50);
 
-        // Ожидание завершения анимации исчезновения
-        await Task.Delay(1000);
+        Prop prop_new = World.CreatePropNoOffset(ante_on, new Vector3(0, 0, 0), false);
+        prop_new.Rotation = prop.Rotation;
+        prop_new.IsVisible = false;
+        prop_new.Position = prop.Position;
+        prop_new.IsVisible = true;
+        prop.Delete();
+        ante_on.MarkAsNoLongerNeeded();
 
-        // Скрытие сообщения
-        bigMessage.Visible = false;
+        Function.Call(Hash.STOP_SOUND, ante_audio);
+        Function.Call(Hash.RELEASE_SOUND_ID, ante_audio);
+
+        Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_HEI4/DLC_HEI4_Collectibles", false, -1);
+        ante_audio = Function.Call<int>(Hash.GET_SOUND_ID);
+        Function.Call(Hash.PLAY_SOUND_FROM_ENTITY, ante_audio, "radio_tower_fixed", prop_new, "dlc_hei4_hidden_collectibles_sounds", false, 0);
+
+        return prop_new;
     }
 
     private class CollectibleItem
@@ -1052,7 +1058,7 @@ public class CollectibleManager : Script
         public int hourSpawn { get; }
         public bool Collected { get; private set; }
         public bool IsAwarded { get; set; } = false;
-        public Prop prop { get; private set; }
+        public Prop prop { get; set; }
         public Vehicle MovieVeh;
 
         public CollectibleItem(int id, Vector3 position, string modelName, Vector3 rotation, CollectibleType type, int HourSpawn)
@@ -1071,17 +1077,17 @@ public class CollectibleManager : Script
 
             if (prop == null || !prop.Exists())
             {
+
                 Model model = new Model(ModelName);
                 model.Request();
 
-                // Ожидание загрузки модели
                 while (!model.IsLoaded) Script.Wait(50);
 
-                prop = World.CreatePropNoOffset(model, Position, false); // Создаем проп без смещения
-                prop.Rotation = Rotation; // Задаем угол поворота
+                prop = World.CreatePropNoOffset(model, Position, false); 
+                prop.Rotation = Rotation; 
                 model.MarkAsNoLongerNeeded();
 
-                if (Type == CollectibleType.Jammers || Type == CollectibleType.Lanterns || Type == CollectibleType.Snowmen)
+                if (Type == CollectibleType.Jammers || Type == CollectibleType.Lanterns)
                 {
 
                     Function.Call(Hash.SET_OBJECT_TARGETTABLE, prop, true, 0);
@@ -1095,6 +1101,20 @@ public class CollectibleManager : Script
                     Function.Call(Hash.SET_ENTITY_PROOFS, prop, false, false, false, true, false, false, false, false);
                 }
 
+                if (Type == CollectibleType.Snowmen)
+                {
+                    Function.Call(Hash.SET_PROJECTILES_SHOULD_EXPLODE_ON_CONTACT, prop, 1);
+                    Function.Call(Hash.SET_ENTITY_PROOFS, prop, true, false, false, true, true, false, false, false);
+                    Function.Call(Hash.SET_ENTITY_HEALTH, prop, 200, 0, 0);
+                }
+
+                if (Type == CollectibleType.RadioAntennas)
+                {
+                    Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_HEI4/DLC_HEI4_Collectibles", false, -1);
+                    ante_audio = Function.Call<int>(Hash.GET_SOUND_ID);
+                    Function.Call(Hash.PLAY_SOUND_FROM_ENTITY, ante_audio, "radio_tower_attract_loop", prop, "dlc_hei4_hidden_collectibles_sounds", false, 0);
+    }
+
                 if (Type == CollectibleType.MovieProps && MovieVeh == null)
                 {
                     Function.Call(Hash.SET_ENTITY_COLLISION, prop, false, 0);
@@ -1106,7 +1126,6 @@ public class CollectibleManager : Script
                             Model veh = new Model("pony");
                             veh.Request();
 
-                            // Ожидание загрузки модели
                             while (!veh.IsLoaded) Script.Wait(50);
                             MovieVeh = World.CreateVehicle(VehicleHash.Pony, Position);
 
@@ -1149,7 +1168,6 @@ public class CollectibleManager : Script
                             veh = new Model("rebel");
                             veh.Request();
 
-                            // Ожидание загрузки модели
                             while (!veh.IsLoaded) Script.Wait(50);
                             MovieVeh = World.CreateVehicle(VehicleHash.Rebel, Position);
                             while (MovieVeh == null) Script.Wait(0);
@@ -1162,14 +1180,35 @@ public class CollectibleManager : Script
         }
 
 
+        public void MarkAsNoLongerNeeded()
+        {
+            if (prop != null && prop.Exists())
+            {
+                prop.MarkAsNoLongerNeeded();
+                prop = null;
+            }
+
+            if (MovieVeh != null && MovieVeh.Exists())
+            {
+                MovieVeh.MarkAsNoLongerNeeded();
+                MovieVeh = null;
+            }
+        }
+
         public void Remove()
         {
             if (prop != null && prop.Exists())
             {
+                if (prop.Model.Hash == new Model("h4_prop_h4_ante_off_01a").Hash || prop.Model.Hash == new Model("h4_prop_h4_ante_on_01a").Hash)
+                {
+                    Function.Call(Hash.STOP_SOUND, ante_audio);
+                    Function.Call(Hash.RELEASE_SOUND_ID, ante_audio);
+                }
 
                 prop.Delete();
                 prop = null;
             }
+            
 
             if (MovieVeh != null && MovieVeh.Exists())
             {
@@ -1189,7 +1228,6 @@ public class CollectibleManager : Script
         public void Collect()
         {
             Collected = true;
-            Remove();
         }
     }
 
@@ -1204,6 +1242,7 @@ public class CollectibleManager : Script
         MovieProps,
         MediaSticks,
         Lanterns,
-        Yuanbao
+        Yuanbao,
+        RadioAntennas
     }
 }

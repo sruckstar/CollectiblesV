@@ -4821,4 +4821,534 @@ public class CollectList
 				return "m24_2_prop_m42_treasure_01a";
 		}
     }
+
+	public static string GetSnowmanModelName(int id)
+    {
+		id -= 100;
+		switch (id)
+		{
+			case 0:
+				return "xm3_Prop_XM3_Snowman_01a";
+
+			case 1:
+				return "xm3_Prop_XM3_Snowman_01b";
+
+			case 2:
+				return "xm3_Prop_XM3_Snowman_01c";
+
+			case 3:
+				return "xm3_Prop_XM3_Snowman_01a";
+
+			case 4:
+				return "xm3_Prop_XM3_Snowman_01b";
+
+			case 5:
+				return "xm3_Prop_XM3_Snowman_01c";
+
+			case 6:
+				return "xm3_Prop_XM3_Snowman_01a";
+
+			case 7:
+				return "xm3_Prop_XM3_Snowman_01b";
+
+			case 8:
+				return "xm3_Prop_XM3_Snowman_01c";
+
+			case 9:
+				return "xm3_Prop_XM3_Snowman_01a";
+
+			case 10:
+				return "xm3_Prop_XM3_Snowman_01b";
+
+			case 11:
+				return "xm3_Prop_XM3_Snowman_01c";
+
+			case 12:
+				return "xm3_Prop_XM3_Snowman_01a";
+
+			case 13:
+				return "xm3_Prop_XM3_Snowman_01b";
+
+			case 14:
+				return "xm3_Prop_XM3_Snowman_01c";
+
+			case 15:
+				return "xm3_Prop_XM3_Snowman_01a";
+
+			case 16:
+				return "xm3_Prop_XM3_Snowman_01b";
+
+			case 17:
+				return "xm3_Prop_XM3_Snowman_01c";
+
+			case 18:
+				return "xm3_Prop_XM3_Snowman_01a";
+
+			case 19:
+				return "xm3_Prop_XM3_Snowman_01b";
+
+			case 20:
+				return "xm3_Prop_XM3_Snowman_01c";
+
+			case 21:
+				return "xm3_Prop_XM3_Snowman_01a";
+
+			case 22:
+				return "xm3_Prop_XM3_Snowman_01b";
+
+			case 23:
+				return "xm3_Prop_XM3_Snowman_01c";
+
+			case 24:
+				return "xm3_Prop_XM3_Snowman_01a";
+		}
+
+		return "";
+    }
+
+	public static Vector3 GetSnowmanPosition(int id)
+    {
+		id -= 100;
+		switch (id)
+		{
+			case 0:
+				return new Vector3(-374.0548f, 6230.472f, 30.4462f);
+
+			case 1:
+				return  new Vector3(1558.4845f, 6449.3965f, 22.8348f);
+
+			case 2:
+				return new Vector3(3314.504f, 5165.038f, 17.386f);
+
+			case 3:
+				return new Vector3(1709.097f, 4680.172f, 41.919f);
+
+			case 4:
+				return new Vector3(-1414.734f, 5101.661f, 59.248f);
+
+			case 5:
+				return new Vector3(1988.997f, 3830.344f, 31.376f);
+
+			case 6:
+				return new Vector3(234.725f, 3103.582f, 41.434f);
+
+			case 7:
+				return new Vector3(2357.556f, 2526.069f, 45.5f);
+
+			case 8:
+				return new Vector3(1515.591f, 1721.268f, 109.26f);
+
+			case 9:
+				return new Vector3(-45.725f, 1963.218f, 188.93f);
+
+			case 10:
+				return new Vector3(-1517.221f, 2140.711f, 54.936f);
+
+			case 11:
+				return new Vector3(-2830.558f, 1420.358f, 99.885f);
+
+			case 12:
+				return new Vector3(-2974.7288f, 713.9555f, 27.3101f);
+
+			case 13:
+				return new Vector3(-1938.257f, 589.845f, 118.757f);
+
+			case 14:
+				return new Vector3(-456.1271f, 1126.6056f, 324.7816f);
+
+			case 15:
+				return new Vector3(-820.763f, 165.984f, 70.254f);
+
+			case 16:
+				return new Vector3(218.7153f, -104.1239f, 68.7078f);
+
+			case 17:
+				return new Vector3(902.2285f, -285.8174f, 64.6523f);
+
+			case 18:
+				return new Vector3(-777.0854f, 880.5856f, 202.3774f);
+
+			case 19:
+				return new Vector3(1270.0951f, -645.7452f, 66.9289f);
+
+			case 20:
+				return new Vector3(180.9037f, -904.4719f, 29.6439f);
+
+			case 21:
+				return new Vector3(-958.819f, -780.149f, 16.819f);
+
+			case 22:
+				return new Vector3(-1105.3816f, -1398.6503f, 4.1505f);
+
+			case 23:
+				return new Vector3(-252.2187f, -1561.5228f, 30.8514f);
+
+			case 24:
+				return new Vector3(1340.639f, -1585.771f, 53.218f);
+		}
+
+		return new Vector3(0, 0, 0);
+	}
+
+	public static Vector3 GetSnowmanRotation(int id)
+    {
+		id -= 100;
+		switch (id)
+		{
+			case 0:
+				return new Vector3( 0f, 0f, -11.2003f);
+
+			case 1:
+				return new Vector3( 0f, 0f, 25.4f);
+
+			case 2:
+				return new Vector3( 0f, 0f, 53.3f);
+
+			case 3:
+				return new Vector3( 0f, -1.6f, -97.3f);
+
+			case 4:
+				return new Vector3( -6.37f, 0f, -2.152f);
+
+			case 5:
+				return new Vector3( 2.807f, -0.84f, 123.525f);
+
+			case 6:
+				return new Vector3( 0f, 0f, -84.78f);
+
+			case 7:
+				return new Vector3( -2.5f, 0f, 135.22f);
+
+			case 8:
+				return new Vector3( 2.7f, 0f, -88.381f);
+
+			case 9:
+				return new Vector3( 0f, -1.8f, -152.381f);
+
+			case 10:
+				return new Vector3( -2.2f, 0f, 55.818f);
+
+			case 11:
+				return new Vector3( 0f, 0f, 102.818f);
+
+			case 12:
+				return new Vector3( 0.3f, 4.168f, 173.5475f);
+
+			case 13:
+				return new Vector3( 0f, 4.1f, -111.524f);
+
+			case 14:
+				return new Vector3( 0f, 0f, 125.3527f);
+
+			case 15:
+				return new Vector3( -2.545f, -3.973f, 85.375f);
+
+			case 16:
+				return new Vector3( 0f, 0f, 72.8887f);
+
+			case 17:
+				return new Vector3( 0f, 0f, 17.8878f);
+
+			case 18:
+				return new Vector3( 0f, 0f, -23.3121f);
+
+			case 19:
+				return new Vector3( 0f, 0f, 141.7511f);
+
+			case 20:
+				return new Vector3( 0f, 0f, 34.368f);
+
+			case 21:
+				return new Vector3( 0f, 0f, 57.168f);
+
+			case 22:
+				return new Vector3( 0f, 0f, 53.3677f);
+
+			case 23:
+				return new Vector3( 0f, 0f, 115.3669f);
+
+			case 24:
+				return new Vector3( 4.2f, 0f, 2.167f);
+
+		}
+
+		return new Vector3(0, 0, 0);
+    }
+
+	public static string GetGhost2024Name(int id)
+    {
+		switch (id)
+		{
+			case 0:
+				return "m23_1_prop_m31_ghostrurmeth_01a";
+
+			case 1:
+				return "m23_1_prop_m31_ghostskidrow_01a";
+
+			case 2:
+				return "m23_1_prop_m31_ghostsalton_01a";
+
+			case 3:
+				return "m23_1_prop_m31_ghostzombie_01a";
+
+			case 4:
+				return "m23_1_prop_m31_ghostzombie_01a";
+
+			case 5:
+				return "m23_1_prop_m31_ghostskidrow_01a";
+
+			case 6:
+				return "m23_1_prop_m31_ghostsalton_01a";
+
+			case 7:
+				return "m23_1_prop_m31_ghostrurmeth_01a";
+
+			case 8:
+				return "m23_1_prop_m31_ghostsalton_01a";
+
+			case 9:
+				return "m24_1_Prop_M41_Ghost_Dom_01a";
+		}
+
+		return "";
+    }
+
+	public static string GetGhost2023Name(int id)
+    {
+		switch (id)
+		{
+			case 0:
+				return "m23_1_prop_m31_ghostsalton_01a";
+
+			case 1:
+				return "m23_1_prop_m31_ghostrurmeth_01a";
+
+			case 2:
+				return "m23_1_prop_m31_ghostskidrow_01a";
+
+			case 3:
+				return "m23_1_prop_m31_ghostzombie_01a";
+
+			case 4:
+				return "m23_1_prop_m31_ghostrurmeth_01a";
+
+			case 5:
+				return "m23_1_prop_m31_ghostsalton_01a";
+
+			case 6:
+				return "m23_1_prop_m31_ghostzombie_01a";
+
+			case 7:
+				return "m23_1_prop_m31_ghostrurmeth_01a";
+
+			case 8:
+				return "m23_1_prop_m31_ghostskidrow_01a";
+
+			case 9:
+				return "m23_1_prop_m31_ghostjohnny_01a";
+		}
+
+		return "";
+	}
+
+	public static Vector3 GetMoviePropsPosition(int id)
+    {
+		id -= 146;
+		switch (id)
+		{
+			case 0:
+				return new Vector3( 94.202f, -1294.965f, 29.067f);
+
+			case 1:
+				return new Vector3( -1010.051f, -502.175f, 36.493f);
+
+			case 2:
+				return new Vector3( 2517.254f, 3789.326f, 53.698f);
+
+			case 3:
+				return new Vector3( -2349.036f, 3270.785f, 32.968f);
+
+			case 4:
+				return new Vector3(930.98f, 42.64f, 80.86f);
+
+			case 5:
+				return new Vector3( -41.795f, 2873.231f, 59.625f);
+
+			case 6:
+				return new Vector3( -1169.573f, 4926.988f, 223.7279f);
+
+			case 7:
+				return new Vector3(-668.545f, 80.07295f, 51.15895f);
+
+			case 8:
+				return new Vector3(463.3454f, -736.3801f, 27.36179f);
+
+			case 9:
+				return new Vector3(-77.77018f, 6537.488f, 31.49081f);
+		}
+
+		return new Vector3(0, 0, 0);
+    }
+
+	public static Vector3 GetMoviePropsRotate(int id)
+	{
+		id -= 146;
+		switch (id)
+		{
+			case 0:
+				return new Vector3(0f, 0f, 162.199f);
+
+			case 1:
+				return new Vector3(70.469f, 65.317f, 144.253f);
+
+			case 2:
+				return new Vector3(0f, 1f, -93.347f);
+
+			case 3:
+				return new Vector3(84.5331f, -12.007f, 45.9f);
+
+			case 4:
+				return new Vector3(1.600825E-06f, -87.75067f, -127.4983f);
+
+			case 5:
+				return new Vector3(0f, 0f, 56.998f);
+
+			case 6:
+				return new Vector3(-4.274f, 0f, 84.998f);
+
+			case 7:
+				return new Vector3(0, 0, 271.0984f);
+
+			case 8:
+				return new Vector3(0, 0, 180.4602f);
+
+			case 9:
+				return new Vector3(0, 0, 315.4369f);
+		}
+
+		return new Vector3(0, 0, 0);
+	}
+
+	public static string GetMoviePropsModelName(int id)
+	{
+		id -= 146;
+		switch (id)
+		{
+			case 0:
+				return "sum_prop_ac_wifaaward_01a";
+
+			case 1:
+				return "sum_Prop_AC_FilmReel_01a";
+
+			case 2:
+				return "sum_Prop_AC_AlienHead_01a";
+
+			case 3:
+				return "sum_Prop_AC_Clapperboard_01a";
+
+			case 4:
+				return "sum_Prop_AC_HeadDress_01a";
+
+			case 5:
+				return "sum_Prop_AC_MummyHead_01a";
+
+			case 6:
+				return "sum_Prop_AC_MonsterMask_01a";
+
+			case 7:
+				return "sum_prop_ac_sarcophagus_01a";
+
+			case 8:
+				return "sum_prop_ac_tigerrug_01a";
+
+			case 9:
+				return "sum_prop_ac_drinkglobe_01a";
+		}
+
+		return "";
+	}
+
+	public static string GetAnteModelName(int status)
+    {
+		if (status == 0) return "h4_prop_h4_ante_off_01a";	
+		else return "h4_prop_h4_ante_on_01a";
+	}
+
+	public static Vector3 GetAntePosition(int id)
+    {
+		id -= 600;
+		switch(id)
+        {
+			case 0:
+				return new Vector3( -370.414f, 6106.369f, 38.462f);
+
+			case 1:
+				return new Vector3( 441.969f, 5560.475f, 780.189f);
+
+			case 2:
+				return new Vector3( 2675.537f, 4572.392f, 39.62f);
+
+			case 3:
+				return new Vector3( 1942.489f, 3797.668f, 31.037f);
+
+			case 4:
+				return new Vector3( 716.597f, 2584.85f, 72.384f);
+
+			case 5:
+				return new Vector3( 771.354f, 1274.44f, 359.297f);
+
+			case 6:
+				return new Vector3( -2212.471f, 339.629f, 198.111f);
+
+			case 7:
+				return new Vector3( -1187.371f, -1553.168f, 20.382f);
+
+			case 8:
+				return new Vector3( -147.808f, -122.338f, 96.153f);
+
+			case 9:
+				return new Vector3( 841.057f, -2295.438f, 52.673f);
+		}
+
+		return new Vector3(0, 0, 0);
+	}
+
+	public static Vector3 GetAnteRotation(int id)
+    {
+		id -= 600;
+		switch (id)
+        {
+			case 0:
+				return new Vector3( 0f, 0f, 134.199f);
+
+			case 1:
+				return new Vector3( 0f, 0f, 133.599f);
+
+			case 2:
+				return new Vector3( 0f, 0f, 133.599f);
+
+			case 3:
+				return new Vector3( 0f, 0f, 30.999f);
+
+			case 4:
+				return new Vector3( 0f, 0f, 59.199f);
+
+			case 5:
+				return new Vector3( 0f, 0f, -92.601f);
+
+			case 6:
+				return new Vector3( 0f, 0f, -66.402f);
+
+			case 7:
+				return new Vector3( 0f, 0f, 86.598f);
+
+			case 8:
+				return new Vector3( 0f, 0f, -47.002f);
+
+			case 9:
+				return new Vector3( 0f, 0f, -47.002f);
+		}
+
+		return new Vector3(0, 0, 0);
+	}
 }

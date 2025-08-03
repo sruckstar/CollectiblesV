@@ -4,3 +4,10 @@
 
 /CollectiblesV/obj/Debug
 /CollectiblesV/.vs/CollectiblesV/v16
+/CollectiblesV/.vs
+/CollectiblesV/bin
+/CollectiblesV/bin
+*.pdb
+/CollectiblesV/obj
+*.pdb
+*.dll
