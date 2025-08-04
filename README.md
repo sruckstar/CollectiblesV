@@ -1,5 +1,5 @@
 # CollectiblesV
-The script brings collectibles from GTA Online to the  GTA 5. 595 items have been added to the game that can be collected, destroyed, or photographed:
+The script brings collectibles from GTA Online to the  GTA 5. 625 items have been added to the game that can be collected, destroyed, or photographed:
 
 - 100 action figures
 - 25 Snowmen
