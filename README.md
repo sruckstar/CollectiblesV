@@ -9,7 +9,8 @@ The script brings collectibles from GTA Online to the  GTA 5. 595 items have bee
 - 50 signal jammers
 - 54 playing cards
 - 200 Halloween Pumpkins
-- 36 Yuanbao items (These collectibles are not available in GTA Online at the time of this mod's release)
+- 36 Yuanbao items
+- 30 Smoke on the Water Products
 
 
 # Progress Menu
