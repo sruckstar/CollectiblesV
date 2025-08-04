@@ -5351,4 +5351,207 @@ public class CollectList
 
 		return new Vector3(0, 0, 0);
 	}
+
+    public static Vector3 GetSmokeWaterWeedPosition(int id)
+    {
+        id -= 610;
+        switch (id)
+        {
+            case 0:
+                return new Vector3(2652.135f, 4246.598f, 44.6635f);
+
+            case 1:
+                return new Vector3(-778.3246f, 5594.367f, 33.8983f);
+
+            case 2:
+                return new Vector3(1734.064f, 6409.851f, 34.7694f);
+
+            case 3:
+                return new Vector3(468.4316f, 3553.34f, 33.3927f);
+
+            case 4:
+                return new Vector3(2339.081f, 2548.149f, 46.7622f);
+
+            case 5:
+                return new Vector3(-2226.641f, 3409.312f, 32.8468f);
+
+            case 6:
+                return new Vector3(-2256.636f, 241.9759f, 174.5f);
+
+            case 7:
+                return new Vector3(466.4383f, 2608.135f, 44.5259f);
+
+            case 8:
+                return new Vector3(2557f, 380.0874f, 108.6407f);
+
+            case 9:
+                return new Vector3(-1502.711f, 1530.183f, 115.1329f);
+
+            case 10:
+                return new Vector3(-373.6365f, 1257.881f, 328.4709f);
+
+            case 11:
+                return new Vector3(-3172.648f, 1073.064f, 20.671f);
+
+            case 12:
+                return new Vector3(1652.849f, 4958.416f, 42.5356f);
+
+            case 13:
+                return new Vector3(834.3145f, 506.59f, 126.0568f);
+
+            case 14:
+                return new Vector3(-1107.3f, -1699f, 4.5673f);
+
+            case 15:
+                return new Vector3(-1908.895f, -580.9476f, 18.5486f);
+
+            case 16:
+                return new Vector3(955.1594f, -2252.651f, 30.654f);
+
+            case 17:
+                return new Vector3(977.3214f, -739.2873f, 56.7715f);
+
+            case 18:
+                return new Vector3(59.0247f, -1936.596f, 21.0069f);
+
+            case 19:
+                return new Vector3(-39.8601f, 345.1989f, 113.933f);
+
+            case 20:
+                return new Vector3(-1049.689f, -2732.22f, 13.33f);
+
+            case 21:
+                return new Vector3(-873.6f, -872.2f, 18.1509f);
+
+            case 22:
+                return new Vector3(-1291.341f, -114.7751f, 47.8326f);
+
+            case 23:
+                return new Vector3(101.6272f, -1074.369f, 29.3656f);
+
+            case 24:
+                return new Vector3(-248.4079f, -335.1033f, 29.4543f);
+
+            case 25:
+                return new Vector3(-963.8f, 449f, 79.6885f);
+
+            case 26:
+                return new Vector3(243.3116f, -2939.177f, 6.0443f);
+
+            case 27:
+                return new Vector3(1429.204f, -1494.379f, 62.9169f);
+
+            case 28:
+                return new Vector3(835.3779f, -1224.91f, 26.6525f);
+
+            case 29:
+                return new Vector3(2051.704f, 3409.889f, 44.5398f);
+        }
+
+        return new Vector3(0, 0, 0);
+    }
+
+    public static Vector3 GetSmokeWaterWeedRotation(int id)
+    {
+        id -= 610;
+        switch (id)
+        {
+            case 0:
+                return new Vector3(0f, 0f, -117.001f);
+
+            case 1:
+                return new Vector3(0f, 0f, -117.001f);
+
+            case 2:
+                return new Vector3(0f, 0f, 63.1989f);
+
+            case 3:
+                return new Vector3(0f, 0f, -132.6011f);
+
+            case 4:
+                return new Vector3(0f, 0f, -132.6011f);
+
+            case 5:
+                return new Vector3(0f, 0f, -132.6011f);
+
+            case 6:
+                return new Vector3(0f, 0f, 148.5988f);
+
+            case 7:
+                return new Vector3(0f, 0f, 56.3987f);
+
+            case 8:
+                return new Vector3(0f, 0f, -93.402f);
+
+            case 9:
+                return new Vector3(-5.6f, 0f, -93.402f);
+
+            case 10:
+                return new Vector3(0f, 0f, -93.402f);
+
+            case 11:
+                return new Vector3(0f, 0f, -93.4019f);
+
+            case 12:
+                return new Vector3(0f, 0f, -143.4022f);
+
+            case 13:
+                return new Vector3(0f, 0f, 37.7978f);
+
+            case 14:
+                return new Vector3(0f, 0f, 77.5977f);
+
+            case 15:
+                return new Vector3(0f, 0f, -60.0025f);
+
+            case 16:
+                return new Vector3(0f, 0f, -120.0027f);
+
+            case 17:
+                return new Vector3(0f, 0f, 67.7973f);
+
+            case 18:
+                return new Vector3(0f, 0f, -120.6034f);
+
+            case 19:
+                return new Vector3(0f, 0f, 60f);
+
+            case 20:
+                return new Vector3(0f, 0f, 0f);
+
+            case 21:
+                return new Vector3(0f, 0f, 0f);
+
+            case 22:
+                return new Vector3(0f, 0f, 0f);
+
+            case 23:
+                return new Vector3(0f, 0f, -142.6003f);
+
+            case 24:
+                return new Vector3(0f, 0f, -142.6003f);
+
+            case 25:
+                return new Vector3(0f, 0f, -47.4f);
+
+            case 26:
+                return new Vector3(0f, 0f, -23.8f);
+
+            case 27:
+                return new Vector3(0f, 0f, 136.1996f);
+
+            case 28:
+                return new Vector3(0f, 0f, 46.3999f);
+
+            case 29:
+                return new Vector3(0f, 0f, 166.1997f);
+        }
+
+        return new Vector3(0, 0, 0);
+    }
+
+    public static string GetSmokeWaterWeedModelName(int id)
+    {
+        return "m25_1_prop_m51_bag_weed_01a";
+    }
 }

@@ -49,6 +49,7 @@ public class CollectiblesV : Script
     private NativeItem lanterns;
     private NativeItem Yuanbao;
     private NativeItem antennas;
+    private NativeItem SmokeWaterWeed;
     private Keys KeyActiveMenu;
     private ScriptSettings config;
 
@@ -82,6 +83,7 @@ public class CollectiblesV : Script
         lanterns = new NativeItem(Game.GetLocalizedString("PIM_TRICKTR"), "");
         Yuanbao = new NativeItem(Game.GetLocalizedString("PIM_YUANBAOTR"), "");
         antennas = new NativeItem("Radio antennas", "");
+        SmokeWaterWeed = new NativeItem(Game.GetLocalizedString("PIM_WEEDPAC_TR"), "");
 
         InitializeCollectedCount();
         LoadCollectibles();
@@ -99,6 +101,7 @@ public class CollectiblesV : Script
         Yuanbao.AltTitle = $"{collectedCount[CollectibleType.Yuanbao]}/36";
         lanterns.AltTitle = $"{collectedCount[CollectibleType.Lanterns]}/200";
         antennas.AltTitle = $"{collectedCount[CollectibleType.RadioAntennas]}/10";
+        SmokeWaterWeed.AltTitle = $"{collectedCount[CollectibleType.SmokeWaterWeed]}/30";
     }
 
     private void LoadSoundsEffects()
@@ -111,6 +114,7 @@ public class CollectiblesV : Script
         Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "Ghost_Hunt_Sounds", false, -1);
         Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_SUM20/DLC_SUM20_HIDDEN_COLLECTIBLES", false, -1);
         Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_MPSUM2/DLC_mpSum2_Collectibles", false, -1);
+        Function.Call(Hash.REQUEST_SCRIPT_AUDIO_BANK, "DLC_25-1/DLC_25-1_Freemode_Collectibles", false, -1);
     }
 
     private void ToggleCollectorRadar()
@@ -330,6 +334,16 @@ public class CollectiblesV : Script
             }
             menu.Add(antennas);
         }
+
+        //Smoke Water Weed
+        if (config.GetValue<int>("SPAWN_SETTINGS", "SmokeWaterWeed", 1) == 1)
+        {
+            for (int i = 610; i < 640; i++)
+            {
+                collectibles.Add(new CollectibleItem(i, CollectList.GetSmokeWaterWeedPosition(i), CollectList.GetSmokeWaterWeedModelName(i), CollectList.GetSmokeWaterWeedRotation(i), CollectibleType.SmokeWaterWeed, -1));
+            }
+            menu.Add(SmokeWaterWeed);
+        }
     }
 
     private void onkeyup(object sender, KeyEventArgs e)
@@ -346,6 +360,7 @@ public class CollectiblesV : Script
             Yuanbao.AltTitle = $"{collectedCount[CollectibleType.Yuanbao]}/36";
             lanterns.AltTitle = $"{collectedCount[CollectibleType.Lanterns]}/200";
             antennas.AltTitle = $"{collectedCount[CollectibleType.RadioAntennas]}/10";
+            SmokeWaterWeed.AltTitle = $"{collectedCount[CollectibleType.SmokeWaterWeed]}/30";
             menu.Visible = true;
         }
     }
@@ -440,6 +455,7 @@ public class CollectiblesV : Script
                     case CollectibleType.MediaSticks:
                     case CollectibleType.Yuanbao:
                     case CollectibleType.RadioAntennas:
+                    case CollectibleType.SmokeWaterWeed:
 
                         if (distanceToPlayer <= 1.5f && !collectible.Collected)
                         {
@@ -464,6 +480,10 @@ public class CollectiblesV : Script
 
                                 case CollectibleType.RadioAntennas:
                                     GTA.UI.Screen.ShowHelpTextThisFrame(Game.GetLocalizedString("CONRAD_COLLEC"));
+                                    break;
+
+                                case CollectibleType.SmokeWaterWeed:
+                                    GTA.UI.Screen.ShowHelpTextThisFrame(Game.GetLocalizedString("COL25DAILWEEDCONT"));
                                     break;
                             }
 
@@ -800,6 +820,14 @@ public class CollectiblesV : Script
                             Game.Player.Money += 100000;
                         }
                         break;
+
+                    case CollectibleType.SmokeWaterWeed:
+                        if (collectedCount[CollectibleType.SmokeWaterWeed] == 10)
+                        {
+                            Game.Player.Money += 100000;
+                            collectible.IsAwarded = true;
+                        }
+                        break;
                 }
             }
         }
@@ -946,6 +974,15 @@ public class CollectiblesV : Script
                 subtitle = ReplacePlaceholder(Game.GetLocalizedString("RADST_COLLECT"), collectedCount[type]);
                 GTA.UI.Notification.PostTicker(ReplacePlaceholder(Game.GetLocalizedString("RADST_TICKER"), collectedCount[type]), true);
                 Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "radio_tower_shard_single", "dlc_hei4_hidden_collectibles_sounds", false);
+                break;
+
+            case CollectibleType.SmokeWaterWeed:
+                title = Game.GetLocalizedString("WEEDPAC_HEADER");
+                Random rnd = new Random();
+                int randomIndex = rnd.Next(0, 3);
+                subtitle = Game.GetLocalizedString($"WEEDPACCOLLECT{randomIndex}");
+                GTA.UI.Notification.PostTicker(ReplacePlaceholder(Game.GetLocalizedString("WEEDPAC_TICKER"), collectedCount[type]), true);
+                Function.Call(Hash.PLAY_SOUND_FRONTEND, -1, "Collect", "DLC_25-1_Weed_Collectible_Sounds", false);
                 break;
         }
 
@@ -1243,6 +1280,7 @@ public class CollectiblesV : Script
         MediaSticks,
         Lanterns,
         Yuanbao,
-        RadioAntennas
+        RadioAntennas,
+        SmokeWaterWeed
     }
 }

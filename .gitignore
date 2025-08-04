@@ -11,3 +11,7 @@
 /CollectiblesV/obj
 *.pdb
 *.dll
+/.vs
+*.dll
+*.pdb
+/CollectiblesV/bin

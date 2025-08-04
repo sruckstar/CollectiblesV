@@ -32,10 +32,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="LemonUI.SHVDN3">
-      <HintPath>D:\Games\Rockstar Games\Grand Theft Auto V (Modding)\scripts\LemonUI.SHVDN3.dll</HintPath>
+      <HintPath>D:\Rockstar Games\Grand Theft Auto V\scripts\LemonUI.SHVDN3.dll</HintPath>
     </Reference>
-    <Reference Include="ScriptHookVDotNet3">
-      <HintPath>D:\Games\Rockstar Games\Grand Theft Auto V\ScriptHookVDotNet3.dll</HintPath>
+    <Reference Include="ScriptHookVDotNet3, Version=3.6.0.137, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\OneDrive\Документы\GitHub\SHDN 3.6.0\ScriptHookVDotNet3.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
