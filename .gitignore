@@ -15,3 +15,5 @@
 *.dll
 *.pdb
 /CollectiblesV/bin
+CollectiblesV/bin/Debug/CollectiblesV.dll
+CollectiblesV/bin/Debug/CollectiblesV.pdb
